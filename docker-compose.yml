@@ -1,0 +1,16 @@
+version: "2"
+services:
+  web:
+    image: "node:lts"
+    user: "node"
+    working_dir: /home/node/app
+    environment:
+      - NODE_ENV=test
+      - PORT=4000
+      - LOG_LEVEL=info
+      - DEBUG=
+      - COMPOSE_RABBITMQ_URL=amqp://rabbitmq:rabbitmq@localhost:5672
+    volumes:
+      - ./:/home/node/app
+    ports:
+      - "3000:3000"

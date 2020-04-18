@@ -1,0 +1,62 @@
+{
+  "name": "benchmarkrabbitmqkafka",
+  "version": "0.0.1",
+  "description": "got url checking",
+  "main": "app.js",
+  "scripts": {
+    "start": "node -r dotenv/config app.js",
+    "debug": "node --inspect -r dotenv/config app.js",
+    "prettier": "prettier --write \"**/*.js\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "jest --setupFiles dotenv/config --forceExit --detectOpenHandles",
+    "test:watch": "jest --watch --setupFiles dotenv/config",
+    "test:cover": "jest --coverage --setupFiles dotenv/config",
+    "test:load": "npx autocannon -c 10 -d 5 -p 10 localhost:4000",
+    "test:load:post": "npx autocannon -c 10 -d 5 -p 10 -m 'POST' -b '{\"message\":\"test message for queue \"}' localhost:4000/message",
+    "test:load:get": "npx autocannon -c 100 -d 5 -p 10 localhost:4000/message",
+    "test:integration": "npm test"
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write",
+      "eslint",
+      "git add"
+    ]
+  },
+  "author": {
+    "name": "harry",
+    "url": "https://github.com/harryranakl"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/harryranakl/benchmark-rabbitmq-kafka"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "body-parser": "^1.19.0",
+    "debug": "^4.1.1",
+    "dotenv": "^8.2.0",
+    "winston": "^3.2.1",
+    "amqplib": "^0.5.2"
+  },
+  "devDependencies": {
+    "autocannon": "^4.6.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-prettier": "^3.1.2",
+    "husky": "^3.1.0",
+    "jest": "^25.2.2",
+    "lint-staged": "^9.5.0",
+    "prettier": "^1.19.1",
+    "supertest": "^4.0.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  }
+}
