@@ -8,15 +8,18 @@
 - **Testing**: Jest, SuperTest, AutoCannon
 - **Continuous Integration**: GitHub Actions + Docker Compose
 - **Other**: PM2, DotEnv
+- **Message Broker**: RabbitMQ, Kafka
 
 ## Getting Started
 ```shell
-# Setup Docker rabbitMQ
+# Setup Docker RabbitMQ
 git clone https://github.com/micahhausler/rabbitmq-compose
 cd rabbitmq-compose
 docker-compose up
 
 # Install all dependencies
+git clone https://github.com/harryranakl/benchmark-rabbitmq-kafka
+cd benchmark-rabbitmq-kafka
 npm install
 
 # Run on port 3000
