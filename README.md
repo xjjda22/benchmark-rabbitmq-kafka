@@ -1,4 +1,4 @@
-# project starter
+# Benchmark RabbitMQ and Kafka
 
 ## Features
 - **Framework**: Express
