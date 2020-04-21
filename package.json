@@ -13,8 +13,9 @@
     "test:watch": "jest --watch --setupFiles dotenv/config",
     "test:cover": "jest --coverage --setupFiles dotenv/config",
     "test:load": "npx autocannon -c 10 -d 5 -p 10 localhost:4000",
-    "test:load:post": "npx autocannon -c 10 -d 5 -p 10 -m 'POST' -b '{\"message\":\"test message for queue \"}' localhost:4000/message",
-    "test:load:get": "npx autocannon -c 100 -d 5 -p 10 localhost:4000/message",
+    "test:load:pub": "npx autocannon -c 10 -d 5 -p 10 localhost:4000/pub/msg123",
+    "test:load:sub": "npx autocannon -c 100 -d 5 -p 10 localhost:4000/sub",
+    "test:load:roundtrip": "npx autocannon -c 100 -d 5 -p 10 localhost:4000/roundTripPubSub/msg123",
     "test:integration": "npm test"
   },
   "lint-staged": {
