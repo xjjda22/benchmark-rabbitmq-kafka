@@ -19,6 +19,7 @@ winston.configure({
 });
 
 const logger = (err, req, res, next) => {
+	winston.info(`logger - ${err}`);
 	if (err && err.name === 'UnauthorizedError') {
 		// log unauthorized requests
 		res.status(HTTPCode.unauthorized.code).end({

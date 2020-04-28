@@ -36,8 +36,17 @@ const dateNow = () => {
 		.replace('Z', '');
 };
 
+function uuid() {
+	return (
+		Math.random().toString() +
+		Math.random().toString() +
+		Math.random().toString()
+	);
+}
+
 module.exports = {
 	isEmpty,
 	randomIntInc,
-	dateNow
+	dateNow,
+	uuid
 };

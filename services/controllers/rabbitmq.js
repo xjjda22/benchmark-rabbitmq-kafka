@@ -3,6 +3,7 @@ const winston = require('winston');
 const amqp = require('amqplib');
 const url = require('url');
 
+const HTTPCode = require('../../helpers/HTTPResponseCode');
 const util = require('../../helpers/util');
 
 const connectionString = process.env.COMPOSE_RABBITMQ_URL;
@@ -14,109 +15,260 @@ if (connectionString === undefined) {
 
 const parsedurl = url.parse(connectionString);
 
-const routingKey = 'route';
-const exchangeName = 'exchange';
-const qName = `queue${util.randomIntInc(11, 20)}`;
+const min = 11;
+const max = 12;
+const routingPubSub = `amqp.pubsub.route.no.${util.randomIntInc(min, max)}`;
+const exchangePubSub = `amqp.pubsub.exchange.no.${util.randomIntInc(min, max)}`;
+const queuePubSub = `amqp.pubsub.queue.no.${util.randomIntInc(min, max)}`;
+
+const routingRPC = `amqp.rpc.route.no.${util.randomIntInc(min, max)}`;
+const exchangeRPC = `amqp.rpc.exchange.no.${util.randomIntInc(min, max)}`;
+const queueRPC = `amqp.rpc.queue.no.${util.randomIntInc(min, max)}`;
+const routingReplyRPC = `amqp.rpc.route.reply.no.${util.randomIntInc(
+	min,
+	max
+)}`;
+const replyRPC = `amqp.rpc.reply.no.${util.randomIntInc(min, max)}`;
+
+const commonPubSubMsg = `[exchange]:${exchangePubSub}, [queue]:${queuePubSub}, [route]:${routingPubSub}`;
+const commonRPCMsg = `[exchange]:${exchangeRPC}, [queue]:${queueRPC}, [route]:${routingRPC}, [reply]:${queueRPC}, [replyroute]:${routingReplyRPC}`;
 
 const open = amqp.connect(connectionString, { servername: parsedurl.hostname });
 
-open
-	.then(conn => {
-		return conn.createChannel();
-	})
-	.then(ch => {
-		// Bind a queue to the exchange to listen for messages
-		// When we publish a message, it will be sent to this queue, via the exchange
-		winston.info(`[exchange]:${exchangeName}, [queue]:${qName}`);
-		return ch
-			.assertExchange(exchangeName, 'direct', { durable: true })
-			.then(() => {
-				return ch.assertQueue(qName, { exclusive: false });
-			})
-			.then(q => {
-				return ch.bindQueue(q.queue, exchangeName, routingKey);
-			});
-	})
-	.catch(err => {
-		winston.info(err);
-		// process.exit(1);
-	});
+const processError = e => {
+	try {
+		const { response } = e;
+		if (!response) throw new Error(e.name);
+
+		// const { url, statusCode: httpCode, headers, body } = response;
+		const { statusCode: httpCode } = response;
+
+		throw new Error(httpCode);
+	} catch (error) {
+		return { error };
+	}
+};
 
 // Publish a message to the exchange
 // RabbitMQ will move it to the queue
-const publish = ({ params }, res) => {
+const publish = ({ params }, res, next) => {
 	const { message } = params;
 	open
 		.then(conn => {
 			return conn.createChannel();
 		})
 		.then(ch => {
-			ch.publish(exchangeName, routingKey, Buffer.from(message));
-			const msgTxt = `${message} : Message sent at ${util.dateNow()}`;
-			winston.info(`[Producer]: ${msgTxt}`);
+			// Bind a queue to the exchange to listen for messages
+			// When we publish a message, it will be sent to this queue, via the exchange
+			winston.info(commonPubSubMsg);
 
-			res.send(message);
+			ch.assertExchange(exchangePubSub, 'direct', { durable: true })
+				.then(q => {
+					return ch.assertQueue(queuePubSub, { exclusive: false });
+				})
+				.then(() => {
+					return ch.bindQueue(queuePubSub, exchangePubSub, routingPubSub);
+				});
+			return ch;
 		})
-		.catch(err => {
-			winston.info(err);
-			res.send(err);
+		.then(ch => {
+			const msgTxt = `[publish]: ${message} Message sent at ${util.dateNow()}`;
+			winston.info(`[publish]: ${msgTxt}`);
+
+			ch.publish(exchangePubSub, routingPubSub, Buffer.from(message));
+
+			res.status(HTTPCode.success.code).send({
+				httpCode: HTTPCode.success.code,
+				msgTxt
+			});
+		})
+		.catch(e => {
+			const { e: err } = processError(e);
+			next(err);
 		});
 };
 
 // Get single message from the queue
-const subscribe = (req, res) => {
+const subscribe = (req, res, next) => {
 	open
 		.then(conn => {
 			return conn.createChannel();
 		})
 		.then(ch => {
-			return ch.get(qName, {}).then(msgOrFalse => {
-				let result = `No messages in [queue]:${qName}`;
-				if (msgOrFalse !== false) {
-					result = `[queue]:${qName}, [route]:${routingKey}, [Producer]: ${msgOrFalse.content.toString()}, [Consumer]: Message received at ${util.dateNow()}`;
+			// Bind a queue to the exchange to listen for messages
+			// When we publish a message, it will be sent to this queue, via the exchange
+			winston.info(commonPubSubMsg);
+
+			ch.assertExchange(exchangePubSub, 'direct', { durable: true })
+				.then(() => {
+					return ch.assertQueue(queuePubSub, { exclusive: false });
+				})
+				.then(q => {
+					return ch.bindQueue(queuePubSub, exchangePubSub, routingPubSub);
+				});
+			return ch;
+		})
+		.then(ch => {
+			return ch.get(queuePubSub, {}).then(msgOrFalse => {
+				let msgTxt = `No messages in [queue]:${queuePubSub}`;
+				if (!util.isEmpty(msgOrFalse.content) !== false) {
+					msgTxt = `[publish]: ${msgOrFalse.content.toString()}, [subscribe]: Message received at ${util.dateNow()}`;
 					ch.ack(msgOrFalse);
 				}
-				winston.info(`[Consumer]: ${result}`);
-				res.send(result);
+				winston.info(`[subscribe]: ${msgTxt}`);
+
+				res.status(HTTPCode.success.code).send({
+					httpCode: HTTPCode.success.code,
+					msgTxt
+				});
 			});
 		})
-		.catch(err => {
-			winston.info(err);
-			res.send(err);
+		.catch(e => {
+			const { e: err } = processError(e);
+			next(err);
 		});
 };
 
-const roundTripPubSub = ({ params }, res) => {
+const roundTripPubSub = ({ params }, res, next) => {
 	const { message } = params;
 	open
 		.then(conn => {
 			return conn.createChannel();
 		})
 		.then(ch => {
-			ch.publish(exchangeName, routingKey, Buffer.from(message));
-			const msgTxt = `[queue]:${qName}, [route]:${routingKey}, [Producer]: ${message}`;
-			winston.info(`${msgTxt}`);
+			// Bind a queue to the exchange to listen for messages
+			// When we publish a message, it will be sent to this queue, via the exchange
+			winston.info(commonPubSubMsg);
+
+			ch.assertExchange(exchangePubSub, 'direct', { durable: true })
+				.then(() => {
+					return ch.assertQueue(queuePubSub, { exclusive: false });
+				})
+				.then(q => {
+					return ch.bindQueue(queuePubSub, exchangePubSub, routingPubSub);
+				});
 			return ch;
 		})
 		.then(ch => {
-			return ch.get(qName, {}).then(msgOrFalse => {
-				let result = `No messages in [queue]:${qName}`;
-				if (msgOrFalse !== false) {
-					result = `[queue]:${qName}, [route]:${routingKey}, [Producer]: ${msgOrFalse.content.toString()}, [Consumer]: Message received at ${util.dateNow()}`;
+			const msgTxt = `[publish]: ${message} Message sent at ${util.dateNow()}`;
+			winston.info(`${msgTxt}`);
+
+			ch.publish(exchangePubSub, routingPubSub, Buffer.from(message));
+
+			return ch;
+		})
+		.then(ch => {
+			return ch.get(queuePubSub, {}).then(msgOrFalse => {
+				let msgTxt = `No messages in [queue]:${queuePubSub}`;
+				if (!util.isEmpty(msgOrFalse.content) !== false) {
+					msgTxt = `[publish]: ${msgOrFalse.content.toString()}, [subscribe]: Message received at ${util.dateNow()}`;
 					ch.ack(msgOrFalse);
 				}
-				winston.info(`[Consumer]: ${result}`);
-				res.send(result);
+				winston.info(`[subscribe]: ${msgTxt}`);
+
+				res.status(HTTPCode.success.code).send({
+					httpCode: HTTPCode.success.code,
+					msgTxt
+				});
 			});
 		})
-		.catch(err => {
-			winston.info(err);
-			res.send(err);
+		.catch(e => {
+			const { e: err } = processError(e);
+			next(err);
+		});
+};
+
+const client = ({ params }, res, next) => {
+	const { message } = params;
+	open
+		.then(conn => {
+			return conn.createChannel();
+		})
+		.then(ch => {
+			// Bind a queue to the exchange to listen for messages
+			// When we publish a message, it will be sent to this queue, via the exchange
+			winston.info(commonRPCMsg);
+
+			ch.assertQueue(queueRPC, { durable: false });
+			const q = ch.assertQueue('', { exclusive: true });
+			return { ch, q };
+		})
+		.then(({ ch, q }) => {
+			ch.sendToQueue(queueRPC, Buffer.from(message), {
+				correlationId: util.uuid(),
+				replyTo: replyRPC
+			});
+			const logTxt = `[client]: ${message} Message sent at ${util.dateNow()}`;
+			winston.info(`[client]: ${logTxt}`);
+
+			ch.consume(q.queue).then(msgOrFalse => {
+				let msgTxt = `No messages in [queue]:${q.queue}`;
+				if (!util.isEmpty(msgOrFalse.content) !== false) {
+					msgTxt = `[client]: ${msgOrFalse.content.toString()}, [server]: Message received at ${util.dateNow()}`;
+				}
+				winston.info(`[client]: ${msgTxt}`);
+
+				return res.status(HTTPCode.success.code).send({
+					httpCode: HTTPCode.success.code,
+					msgTxt
+				});
+			});
+		})
+		.catch(e => {
+			winston.info('err->', e);
+			const { e: err } = processError(e);
+			next(err);
+		});
+};
+
+const server = (req, res, next) => {
+	open
+		.then(conn => {
+			return conn.createChannel();
+		})
+		.then(ch => {
+			// Bind a queue to the exchange to listen for messages
+			// When we publish a message, it will be sent to this queue, via the exchange
+			winston.info(commonRPCMsg);
+
+			ch.assertQueue(queueRPC, { durable: false });
+			return ch;
+		})
+		.then(ch => {
+			ch.prefetch(1);
+			ch.consume(queueRPC).then(msgOrFalse => {
+				let msgTxt = `No messages in [queue]:${queueRPC}`;
+				if (!util.isEmpty(msgOrFalse.content) !== false) {
+					msgTxt = `[client]: ${msgOrFalse.content.toString()}, [server]: Message received at ${util.dateNow()}`;
+
+					winston.info(`[replyRPC]: ${msgOrFalse.properties.replyTo}`);
+					ch.ack(msgOrFalse);
+					ch.sendToQueue(
+						msgOrFalse.properties.replyTo,
+						Buffer.from(msgTxt.toString()),
+						{
+							correlationId: msgOrFalse.properties.correlationId
+						}
+					);
+				}
+				winston.info(`[server]: ${msgTxt}`);
+
+				return res.status(HTTPCode.success.code).send({
+					httpCode: HTTPCode.success.code,
+					msgTxt
+				});
+			});
+		})
+		.catch(e => {
+			const { e: err } = processError(e);
+			next(err);
 		});
 };
 
 module.exports = {
 	publish,
 	subscribe,
-	roundTripPubSub
+	roundTripPubSub,
+	client,
+	server
 };
