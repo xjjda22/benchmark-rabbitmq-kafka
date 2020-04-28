@@ -129,55 +129,6 @@ const subscribe = (req, res, next) => {
 		});
 };
 
-const roundTripPubSub = ({ params }, res, next) => {
-	const { message } = params;
-	open
-		.then(conn => {
-			return conn.createChannel();
-		})
-		.then(ch => {
-			// Bind a queue to the exchange to listen for messages
-			// When we publish a message, it will be sent to this queue, via the exchange
-			winston.info(commonPubSubMsg);
-
-			ch.assertExchange(exchangePubSub, 'direct', { durable: true })
-				.then(() => {
-					return ch.assertQueue(queuePubSub, { exclusive: false });
-				})
-				.then(q => {
-					return ch.bindQueue(queuePubSub, exchangePubSub, routingPubSub);
-				});
-			return ch;
-		})
-		.then(ch => {
-			const msgTxt = `[publish]: ${message} Message sent at ${util.dateNow()}`;
-			winston.info(`${msgTxt}`);
-
-			ch.publish(exchangePubSub, routingPubSub, Buffer.from(message));
-
-			return ch;
-		})
-		.then(ch => {
-			return ch.get(queuePubSub, {}).then(msgOrFalse => {
-				let msgTxt = `No messages in [queue]:${queuePubSub}`;
-				if (!util.isEmpty(msgOrFalse.content) !== false) {
-					msgTxt = `[publish]: ${msgOrFalse.content.toString()}, [subscribe]: Message received at ${util.dateNow()}`;
-					ch.ack(msgOrFalse);
-				}
-				winston.info(`[subscribe]: ${msgTxt}`);
-
-				res.status(HTTPCode.success.code).send({
-					httpCode: HTTPCode.success.code,
-					msgTxt
-				});
-			});
-		})
-		.catch(e => {
-			const { e: err } = processError(e);
-			next(err);
-		});
-};
-
 const client = ({ params }, res, next) => {
 	const { message } = params;
 	open
@@ -268,7 +219,6 @@ const server = (req, res, next) => {
 module.exports = {
 	publish,
 	subscribe,
-	roundTripPubSub,
 	client,
 	server
 };

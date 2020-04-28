@@ -14,7 +14,6 @@ router.get('/api', api.sampleApi);
 
 router.get('/publish/:message', rabbitmq.publish);
 router.get('/subscribe', rabbitmq.subscribe);
-router.get('/roundTripPubSub/:message', rabbitmq.roundTripPubSub);
 
 router.get('/client/:message', rabbitmq.client);
 router.get('/server', rabbitmq.server);
