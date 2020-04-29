@@ -101,6 +101,7 @@ const subscribe = (req, res, next) => {
 
 			ch.assertExchange(exchangePubSub, 'direct', { durable: true })
 				.then(() => {
+					ch.prefetch(5);
 					return ch.assertQueue(queuePubSub, { exclusive: false });
 				})
 				.then(q => {
@@ -182,11 +183,11 @@ const server = (req, res, next) => {
 			// When we publish a message, it will be sent to this queue, via the exchange
 			winston.info(commonRPCMsg);
 
+			ch.prefetch(5);
 			ch.assertQueue(queueRPC, { durable: false });
 			return ch;
 		})
 		.then(ch => {
-			ch.prefetch(1);
 			ch.consume(queueRPC).then(msgOrFalse => {
 				let msgTxt = `No messages in [queue]:${queueRPC}`;
 				if (!util.isEmpty(msgOrFalse.content) !== false) {

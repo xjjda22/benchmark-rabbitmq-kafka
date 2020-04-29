@@ -17,6 +17,11 @@ git clone https://github.com/micahhausler/rabbitmq-compose
 cd rabbitmq-compose
 docker-compose up
 
+# Setup Docker Kafka : https://www.bennettnotes.com/post/setup-kafka-zookeeper-in-docker/
+git clone https://github.com/wurstmeister/kafka-docker
+cd kafka-docker
+docker-compose up --build -d
+
 # Install all dependencies
 git clone https://github.com/harryranakl/benchmark-rabbitmq-kafka
 cd benchmark-rabbitmq-kafka

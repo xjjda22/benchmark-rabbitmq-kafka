@@ -13,9 +13,8 @@
     "test:watch": "jest --watch --setupFiles dotenv/config",
     "test:cover": "jest --coverage --setupFiles dotenv/config",
     "test:load": "npx autocannon -c 10 -d 5 -p 10 localhost:4000",
-    "test:load:pub": "npx autocannon -c 10 -d 5 -p 10 localhost:4000/pub/msg123",
-    "test:load:sub": "npx autocannon -c 100 -d 5 -p 10 localhost:4000/sub",
-    "test:load:roundtrip": "npx autocannon -c 100 -d 5 -p 10 localhost:4000/roundTripPubSub/msg123",
+    "test:load:publish": "npx autocannon -c 10 -d 5 -p 10 localhost:4000/publish/msg123",
+    "test:load:subscribe": "npx autocannon -c 100 -d 5 -p 10 localhost:4000/subscribe",
     "test:integration": "npm test"
   },
   "lint-staged": {
@@ -40,7 +39,9 @@
     "debug": "^4.1.1",
     "dotenv": "^8.2.0",
     "winston": "^3.2.1",
-    "amqplib": "^0.5.2"
+    "amqplib": "^0.5.2",
+    "kafkajs": "^1.12.0",
+    "kafka-node": "^5.0.0"
   },
   "devDependencies": {
     "autocannon": "^4.6.0",
