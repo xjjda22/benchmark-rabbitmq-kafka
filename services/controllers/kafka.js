@@ -84,10 +84,10 @@ const producer = async ({ params }, res, next) => {
 
 		p.send({
 			topic,
-			messages: [{ key: `key-${util.randomIntInc(min, max)}`,value: message }]
+			messages: [{ key: `key-${util.randomIntInc(min, max)}`, value: message }]
 		});
 
-		return res.status(HTTPCode.success.code).send({
+		res.status(HTTPCode.success.code).send({
 			httpCode: HTTPCode.success.code,
 			msgTxt
 		});
@@ -112,13 +112,19 @@ const consumer = async (req, res, next) => {
 			eachMessage: async ({ partition, message }) => {
 				msgTxt = `[producer]: ${message.value.toString()}, [consumer]: Message received at ${util.dateNow()}`;
 				winston.info(`[consumer]: ${msgTxt}`);
+
+				res.status(HTTPCode.success.code).send({
+					httpCode: HTTPCode.success.code,
+					msgTxt
+				});
 			}
 		});
+		setTimeout(c.disconnect, 2000);
 
-		return res.status(HTTPCode.success.code).send({
-			httpCode: HTTPCode.success.code,
-			msgTxt
-		});
+		// res.status(HTTPCode.success.code).send({
+		// 	httpCode: HTTPCode.success.code,
+		// 	msgTxt
+		// });
 	} catch (e) {
 		// console.log('err->', e);
 		const { e: err } = processError(e);
