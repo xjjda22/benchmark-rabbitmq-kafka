@@ -8,13 +8,6 @@ const util = require('../../helpers/util');
 
 const RABBITMQ_URL = process.env.COMPOSE_RABBITMQ_URL;
 
-if (RABBITMQ_URL === undefined) {
-	winston.info('Please set the COMPOSE_RABBITMQ_URL environment variable');
-	process.exit(1);
-}
-
-const parsedurl = url.parse(RABBITMQ_URL);
-
 const min = 11;
 const max = 12;
 const routingPubSub = `amqp.pubsub.route.no.${util.randomIntInc(min, max)}`;
@@ -24,16 +17,21 @@ const queuePubSub = `amqp.pubsub.queue.no.${util.randomIntInc(min, max)}`;
 const routingRPC = `amqp.rpc.route.no.${util.randomIntInc(min, max)}`;
 const exchangeRPC = `amqp.rpc.exchange.no.${util.randomIntInc(min, max)}`;
 const queueRPC = `amqp.rpc.queue.no.${util.randomIntInc(min, max)}`;
-const routingReplyRPC = `amqp.rpc.route.reply.no.${util.randomIntInc(
-	min,
-	max
-)}`;
 const replyRPC = `amqp.rpc.reply.no.${util.randomIntInc(min, max)}`;
 
 const commonPubSubMsg = `[exchange]:${exchangePubSub}, [queue]:${queuePubSub}, [route]:${routingPubSub}`;
-const commonRPCMsg = `[exchange]:${exchangeRPC}, [queue]:${queueRPC}, [route]:${routingRPC}, [reply]:${queueRPC}, [replyroute]:${routingReplyRPC}`;
+const commonRPCMsg = `[exchange]:${exchangeRPC}, [queue]:${queueRPC}, [route]:${routingRPC}, [reply]:${queueRPC}`;
 
-const open = amqp.connect(RABBITMQ_URL, { servername: parsedurl.hostname });
+const connect = () => {
+	if (RABBITMQ_URL === undefined) {
+		winston.info('Please set the COMPOSE_RABBITMQ_URL environment variable');
+		// process.exit(1);
+		return false;
+	}
+
+	const parsedurl = url.parse(RABBITMQ_URL);
+	return amqp.connect(RABBITMQ_URL, { servername: parsedurl.hostname });
+};
 
 const processError = e => {
 	try {
@@ -53,6 +51,7 @@ const processError = e => {
 // RabbitMQ will move it to the queue
 const publish = ({ params }, res, next) => {
 	const { message } = params;
+	const open = connect();
 	open
 		.then(conn => {
 			return conn.createChannel();
@@ -90,6 +89,7 @@ const publish = ({ params }, res, next) => {
 
 // Get single message from the queue
 const subscribe = (req, res, next) => {
+	const open = connect();
 	open
 		.then(conn => {
 			return conn.createChannel();
@@ -132,6 +132,7 @@ const subscribe = (req, res, next) => {
 
 const client = ({ params }, res, next) => {
 	const { message } = params;
+	const open = connect();
 	open
 		.then(conn => {
 			return conn.createChannel();
@@ -174,6 +175,7 @@ const client = ({ params }, res, next) => {
 };
 
 const server = (req, res, next) => {
+	const open = connect();
 	open
 		.then(conn => {
 			return conn.createChannel();

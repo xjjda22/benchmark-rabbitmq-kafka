@@ -17,17 +17,7 @@ const config = {
 };
 const commonProdConsMsg = `[brokers]:${config.BROKERS}, [topic]:${config.TOPIC}, [client]:${config.CLIENTID}, [groupId]:${config.GROUPID}`;
 
-// const client = new Kafka({
-// 	brokers: config.BROKERS,
-// 	clientId: config.CLIENTID
-// });
-
 const topic = config.TOPIC;
-
-// const producerClient = client.producer();
-// const consumerClient = client.consumer({
-// 	groupId: config.GROUPID
-// });
 
 const client = () => {
 	try {
