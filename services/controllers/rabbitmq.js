@@ -6,14 +6,14 @@ const url = require('url');
 const HTTPCode = require('../../helpers/HTTPResponseCode');
 const util = require('../../helpers/util');
 
-const connectionString = process.env.COMPOSE_RABBITMQ_URL;
+const RABBITMQ_URL = process.env.COMPOSE_RABBITMQ_URL;
 
-if (connectionString === undefined) {
+if (RABBITMQ_URL === undefined) {
 	winston.info('Please set the COMPOSE_RABBITMQ_URL environment variable');
 	process.exit(1);
 }
 
-const parsedurl = url.parse(connectionString);
+const parsedurl = url.parse(RABBITMQ_URL);
 
 const min = 11;
 const max = 12;
@@ -33,7 +33,7 @@ const replyRPC = `amqp.rpc.reply.no.${util.randomIntInc(min, max)}`;
 const commonPubSubMsg = `[exchange]:${exchangePubSub}, [queue]:${queuePubSub}, [route]:${routingPubSub}`;
 const commonRPCMsg = `[exchange]:${exchangeRPC}, [queue]:${queueRPC}, [route]:${routingRPC}, [reply]:${queueRPC}, [replyroute]:${routingReplyRPC}`;
 
-const open = amqp.connect(connectionString, { servername: parsedurl.hostname });
+const open = amqp.connect(RABBITMQ_URL, { servername: parsedurl.hostname });
 
 const processError = e => {
 	try {

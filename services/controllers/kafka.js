@@ -5,11 +5,13 @@ const { Kafka } = require('kafkajs');
 const HTTPCode = require('../../helpers/HTTPResponseCode');
 const util = require('../../helpers/util');
 
+const KAFKA_URL = process.env.COMPOSE_KAFKA_URL;
+
 const min = 11;
 const max = 15;
 const config = {
 	TOPIC: 'topicno10',
-	BROKERS: ['localhost:9092'],
+	BROKERS: [KAFKA_URL],
 	GROUPID: 'kafka-consumer-group',
 	CLIENTID: 'sample-kafka-client'
 };
