@@ -30,15 +30,6 @@ npm install
 # Run on port 3000
 npm start
 
-Api Endpoint:
-Method:HEAD
-
-Case: Sample Api 
-EndPoint:
-Response:{
-	
-}
-
 ```
 
 ## Structure
@@ -63,4 +54,57 @@ Response:{
 ├── process.json            # pm2 init
 ├── package.json
 └── README.md         
+```
+
+```shell
+
+Case: rabbitmq publish
+EndPoint: http://localhost:4000/publish/<msg>
+Method:GET
+Response:{
+    "httpCode": 200,
+    "msgTxt": "[publish]: msg12345 Message sent at 2020-04-30 17:21:21.648"
+}
+
+Case: rabbitmq subscribe
+EndPoint: http://localhost:4000/subscribe
+Method:GET
+Response:{
+    "httpCode": 200,
+    "msgTxt": "[publish]: msg12345, [subscribe]: Message received at 2020-04-30 17:21:24.564"
+}
+
+Case: rabbitmq client
+EndPoint: http://localhost:4000/client/<msg>
+Method:GET
+Response:{
+    "httpCode": 200,
+    "msgTxt": "[client]: msg12345 Message sent at 2020-04-30 17:21:21.648"
+}
+
+Case: rabbitmq server
+EndPoint: http://localhost:4000/server
+Method:GET
+Response:{
+    "httpCode": 200,
+    "msgTxt": "[client]: msg12345, [server]: Message received at 2020-04-30 17:21:24.564"
+}
+
+
+Case: kafka producer
+EndPoint: http://localhost:4000/producer/<msg>
+Method:GET
+Response:{
+    "httpCode": 200,
+    "msgTxt": "[producer]: msg12345 Message sent at 2020-04-30 17:21:21.648"
+}
+
+Case: kafka consumer
+EndPoint: http://localhost:4000/consumer
+Method:GET
+Response:{
+    "httpCode": 200,
+    "msgTxt": "[producer]: msg12345, [consumer]: Message received at 2020-04-30 17:21:24.564"
+}
+
 ```
