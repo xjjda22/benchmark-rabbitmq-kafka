@@ -15,6 +15,10 @@
     "test:load": "npx autocannon -c 10 -d 5 -p 10 localhost:4000",
     "test:load:publish": "npx autocannon -c 10 -d 5 -p 10 localhost:4000/publish/msg123",
     "test:load:subscribe": "npx autocannon -c 100 -d 5 -p 10 localhost:4000/subscribe",
+    "test:load:client": "npx autocannon -c 10 -d 5 -p 10 localhost:4000/client/msg123",
+    "test:load:server": "npx autocannon -c 100 -d 5 -p 10 localhost:4000/server",
+    "test:load:producer": "npx autocannon -c 10 -d 5 -p 10 localhost:4000/producer/msg123",
+    "test:load:consumer": "npx autocannon -c 100 -d 5 -p 10 localhost:4000/consumer",
     "test:integration": "npm test"
   },
   "lint-staged": {
