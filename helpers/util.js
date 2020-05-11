@@ -30,10 +30,7 @@ const randomIntInc = (low, high) => {
 };
 
 const dateNow = () => {
-	return new Date(Date.now())
-		.toISOString()
-		.replace('T', ' ')
-		.replace('Z', '');
+	return new Date().toGMTString();
 };
 
 function uuid() {
