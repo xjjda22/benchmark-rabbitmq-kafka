@@ -10,6 +10,7 @@ services:
       - LOG_LEVEL=info
       - DEBUG=
       - COMPOSE_RABBITMQ_URL=amqp://rabbitmq:rabbitmq@localhost:5672
+      - COMPOSE_KAFKA_URL=localhost:9092
     volumes:
       - ./:/home/node/app
     ports:
