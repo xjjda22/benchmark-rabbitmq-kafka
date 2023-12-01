@@ -23,7 +23,7 @@ cd kafka-docker
 docker-compose up --build -d
 
 # Install all dependencies
-git clone https://github.com/harryranakl/benchmark-rabbitmq-kafka
+git clone https://github.com/xjjda22/benchmark-rabbitmq-kafka
 cd benchmark-rabbitmq-kafka
 npm install
 
